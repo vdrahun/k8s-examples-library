@@ -1,0 +1,37 @@
+spring:
+  security:
+    user:
+      name:
+      password:
+      roles: ADMIN
+  application:
+    admin:
+      enabled: true
+  jmx:
+    enabled: true
+
+management:
+  endpoint:
+    health:
+      show-details: always
+      show-components: always
+      probes:
+        enabled: true
+      group:
+        readiness:
+          include: readinessState, db
+  endpoints:
+    jmx:
+      exposure:
+        include: '*'
+    web:
+      base-path: /admin
+      exposure:
+        include: '*'
+  info:
+    java:
+      enabled: true
+    env:
+      enabled: true
+    git:
+      mode: full

@@ -1,0 +1,10 @@
+debug: true
+
+library:
+  size: ${random.int(2,10)}
+
+spring:
+  freemarker:
+    cache: false
+  jpa:
+    show-sql: true
