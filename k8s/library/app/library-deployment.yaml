@@ -1,0 +1,80 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: library
+  namespace: library
+  labels:
+    app: library
+spec:
+  replicas: 1
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      name: library
+      annotations:
+        restart.count: "11"
+      labels:
+        app: library
+    spec:
+      terminationGracePeriodSeconds: 30 # default value
+      containers:
+        - name: library
+          image: vitaly1990/com.xpinjection.library:profile-k8s-vault-v3
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+              name: http
+          resources:
+            requests:
+              cpu: 300m
+              memory: 512Mi
+            limits:
+              cpu: 1000m
+              memory: 1Gi
+          env:
+            - name: SPRING_SECURITY_USER_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: library-secrets
+                  key: APP_SECURITY_USERNAME
+            - name: SPRING_SECURITY_USER_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: library-secrets
+                  key: APP_SECURITY_PASSWORD
+#            - name: SPRING_DATASOURCE_USERNAME
+#              valueFrom:
+#                secretKeyRef:
+#                  name: library-secrets
+#                  key: DB_POSTGRES_USERNAME
+#            - name: SPRING_DATASOURCE_PASSWORD
+#              valueFrom:
+#                secretKeyRef:
+#                  name: library-secrets
+#                  key: DB_POSTGRES_PASSWORD
+          envFrom:
+            - configMapRef:
+                name: library-config
+          livenessProbe:
+            httpGet:
+              port: http
+              path: /admin/health
+            initialDelaySeconds: 25
+            timeoutSeconds: 2
+            periodSeconds: 5
+            failureThreshold: 6
+          readinessProbe:
+            httpGet:
+              port: http
+              path: /admin/health
+            initialDelaySeconds: 20
+            periodSeconds: 5
+            failureThreshold: 3
+      restartPolicy: Always
+      serviceAccountName: library
+  selector:
+    matchLabels:
+      app: library

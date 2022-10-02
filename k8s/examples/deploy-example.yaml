@@ -1,0 +1,100 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kuard
+  annotations:
+    kubernetes.io/change-cause: Just new version 1
+  labels:
+    app: kuard
+spec:
+  replicas: 1
+  strategy:
+    rollingUpdate:
+      maxSurge: 3
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      app: kuard
+  template:
+    metadata:
+      name: kuard
+      annotations:
+        restart.count: "1"
+      labels:
+        app: kuard
+    spec:
+      terminationGracePeriodSeconds: 60
+      automountServiceAccountToken: false
+      nodeSelector:
+        disk-type: ssd
+      volumes:
+        #        - name: secrets
+        #          emptyDir: {}
+        - name: config
+          configMap:
+            name: kuard-config
+      #      initContainers:
+      #        - name: init-1
+      #          image: gcr.io/kuar-demo/kuard-amd64:1
+      #          imagePullPolicy: IfNotPresent
+      #          volumeMounts:
+      #            - mountPath: /mnt
+      #              name: secrets
+      containers:
+        - name: kuard
+          image: gcr.io/kuar-demo/kuard-amd64:1
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: spring.config.import
+              value: "/mnt/application.yaml"
+          volumeMounts:
+            - mountPath: /mnt
+              name: config
+          #            - mountPath: /mnt/secrets
+          #              name: secrets
+          #          command:
+          #            - java -jar
+          #            - app.jar
+          #          args:
+          #            - db.host=127.0.0.1
+          #          env:
+          #            - name: DB_HOST
+          #              valueFrom:
+          #                configMapKeyRef:
+          #                  name: kuard-config
+          #                  key: DB_HOST
+          #                  optional: true
+          #          envFrom:
+          #            - configMapRef:
+          #                name: kuard-config
+          ports:
+            - containerPort: 8080
+              name: http
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "5Mi"
+            limits:
+              memory: "20Mi"
+          startupProbe:
+            httpGet:
+              port: http
+              path: /healthy
+            timeoutSeconds: 1
+            periodSeconds: 5
+            failureThreshold: 6
+          livenessProbe:
+            httpGet:
+              port: http
+              path: /healthy
+            timeoutSeconds: 1
+            periodSeconds: 10
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              port: http
+              path: /ready
+            timeoutSeconds: 1
+            periodSeconds: 10
+            failureThreshold: 3
+      restartPolicy: Always

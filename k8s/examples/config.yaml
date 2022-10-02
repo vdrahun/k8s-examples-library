@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kuard-config
+  labels:
+    app: kuard
+data:
+  application.yaml: |
+    db:
+      host: 127.0.0.1
+      port: 3128

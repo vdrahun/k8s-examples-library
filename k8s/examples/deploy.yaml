@@ -1,0 +1,85 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kuard
+  namespace: demo
+  labels:
+    app: kuard
+  annotations:
+    kubernetes.io/change-cause: "Just new version 1"
+spec:
+  replicas: 1
+  strategy:
+    rollingUpdate:
+      maxSurge: 3
+    type: RollingUpdate
+  template:
+    metadata:
+      name: kuard
+      annotations:
+        restart.count: "1"
+      labels:
+        app: kuard
+    spec:
+      terminationGracePeriodSeconds: 60
+      automountServiceAccountToken: false
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - preference:
+                matchExpressions:
+                  - key: disk-type
+                    operator: In
+                    values:
+                      - ssd
+              weight: 50
+#      nodeSelector:
+#        disk-type: ssd
+      volumes:
+        - name: config
+          configMap:
+            name: kuard-config
+      containers:
+        - name: kuard
+          image: gcr.io/kuar-demo/kuard-amd64:1
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: spring.config.import
+              value: "/mnt/application.yaml"
+          volumeMounts:
+            - mountPath: /mnt
+              name: config
+          ports:
+            - containerPort: 8080
+              name: http
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "5Mi"
+            limits:
+              memory: "20Mi"
+          startupProbe:
+            httpGet:
+              port: http
+              path: /healthy
+            timeoutSeconds: 1
+            periodSeconds: 5
+            failureThreshold: 6
+          livenessProbe:
+            httpGet:
+              port: http
+              path: /healthy
+            timeoutSeconds: 1
+            periodSeconds: 10
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              port: http
+              path: /ready
+            timeoutSeconds: 1
+            periodSeconds: 10
+            failureThreshold: 3
+      restartPolicy: Always
+  selector:
+    matchLabels:
+      app: kuard

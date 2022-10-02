@@ -1,0 +1,63 @@
+nameOverride: ""
+fullnameOverride: ""
+
+dbUrl: jdbc:postgresql://pgpool-svc.infra/postgres
+vault:
+  url: http://vault-dev.infra:8200
+  port: 8200
+  host: vault-dev.infra
+  schema: http
+  kubernetesRole: library
+  kubernetesServiceAccountName: library
+  lifecycle:
+    enable: true
+    minRenewal: 4m
+    expiryThreshold: 5m
+  database:
+    enable: true
+    role: library
+    backend: database
+
+service:
+  port: 8080
+  liveness:
+    path: /admin/health
+    initialDelaySeconds: 25
+    timeoutSeconds: 2
+    periodSeconds: 5
+    failureThreshold: 6
+  readiness:
+    path: /admin/health
+    initialDelaySeconds: 20
+    periodSeconds: 5
+    failureThreshold: 3
+
+ingress:
+  enabled: true
+#  limitConnections: 10
+#  limitRps: 1
+  host: library.helm
+
+replicaCount: 1
+
+image:
+  repository: vitaly1990
+  name: com.xpinjection.library
+  version: profile-k8s-vault-v3
+
+resources:
+  requests:
+    cpu: 300m
+    memory: 512Mi
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+
+databaseSecretName: library-secrets
+
+ingress-nginx:
+  controller:
+    ingressClass: nginx
+    service:
+      externalTrafficPolicy: Local
+      loadBalancerIP: 127.0.0.1

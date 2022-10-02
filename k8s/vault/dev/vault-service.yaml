@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: vault-svc-nodeport
+  namespace: infra
+spec:
+  selector:
+    statefulset.kubernetes.io/pod-name: vault-dev-0
+  ports:
+    - port: 8200
+      nodePort: 30201
+  type: NodePort

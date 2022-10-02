@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "library.fullname" . }}-config
+  labels:
+    {{- include "library.labels" . | nindent 4 }}
+data:
+  SPRING_DATASOURCE_URL: {{ .Values.dbUrl }}
+  SPRING_PROFILES_ACTIVE: "admin"
+  SPRING_CLOUD_VAULT_ENABLED: "true"
+  SPRING_CLOUD_VAULT_HOST: {{ .Values.vault.host }}
+  SPRING_CLOUD_VAULT_PORT: {{ .Values.vault.port | quote }}
+  SPRING_CLOUD_VAULT_SCHEME: {{ .Values.vault.schema }}
+  SPRING_CLOUD_VAULT_URI: {{ .Values.vault.url | quote }}
+  SPRING_CLOUD_VAULT_AUTHENTICATION: kubernetes
+  SPRING_CLOUD_VAULT_KUBERNETES_ROLE: {{ .Values.vault.kubernetesRole }}
+  SPRING_CLOUD_VAULT_KV_ENABLED: "false"
+  SPRING_CLOUD_VAULT_CONFIG_LIFECYCLE_ENABLED: {{ .Values.vault.lifecycle.enable | quote }}
+  SPRING_CLOUD_VAULT_CONFIG_LIFECYCLE_MIN_RENEWAL: {{ .Values.vault.lifecycle.minRenewal }}
+  SPRING_CLOUD_VAULT_CONFIG_LIFECYCLE_EXPIRY_THRESHOLD: {{ .Values.vault.lifecycle.expiryThreshold }}
+  SPRING_CLOUD_VAULT_DATABASE_ENABLED: {{ .Values.vault.database.enable | quote }}
+  SPRING_CLOUD_VAULT_DATABASE_ROLE: {{ .Values.vault.database.role }}
+  SPRING_CLOUD_VAULT_DATABASE_BACKEND: {{ .Values.vault.database.backend }}

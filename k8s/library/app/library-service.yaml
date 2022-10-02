@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: svc-library
+  namespace: library
+  labels:
+    app: library
+    tech-stack: springboot
+spec:
+  selector:
+    app: library
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
+      protocol: TCP
+  type: ClusterIP

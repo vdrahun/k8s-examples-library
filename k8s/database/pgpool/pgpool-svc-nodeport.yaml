@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: pgpool-svc-nodeport
+  namespace: infra
+spec:
+  selector:
+    app: pgpool
+  ports:
+    - name: postgresql
+      port: 5432
+      nodePort: 32000
+      targetPort: postgresql
+      protocol: TCP
+  type: NodePort
+  sessionAffinity: None

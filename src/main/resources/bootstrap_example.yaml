@@ -1,0 +1,22 @@
+spring:
+  cloud:
+    vault:
+      host: localhost
+      port: 30200
+      scheme: http
+      uri: http://localhost:30200
+      connection-timeout: 5000
+      read-timeout: 15000
+      authentication: token
+      token: hvs.bnLwmg5nbbsFm32jrjns7fit
+      config:
+        lifecycle:
+          enabled: true
+          min-renewal: 4m
+          expiry-threshold: 5m
+      kv:
+        enabled: false
+      database:
+        enabled: true
+        role: library
+        backend: database

@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "library.fullname" . }}
+  labels:
+    {{- include "library.labels" . | nindent 4 }}
+    tech-stack: springboot
+spec:
+  type: ClusterIP
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "library.selectorLabels" . | nindent 4 }}

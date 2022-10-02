@@ -1,0 +1,69 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "library.fullname" . }}
+  labels:
+    {{- include "library.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      {{- include "library.selectorLabels" .  | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "library.labels" . | nindent 8 }}
+      annotations:
+        config/checksum: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+    spec:
+      terminationGracePeriodSeconds: 30
+      restartPolicy: Always
+      serviceAccountName: {{ .Values.vault.kubernetesServiceAccountName }}
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}/{{ .Values.image.name }}:{{ .Values.image.version }}"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: {{ .Values.service.port }}
+              protocol: TCP
+              name: http
+          resources:
+            requests:
+              cpu: {{ .Values.resources.requests.cpu }}
+              memory: {{ .Values.resources.requests.memory }}
+            limits:
+              cpu: {{ .Values.resources.limits.cpu }}
+              memory: {{ .Values.resources.limits.memory }}
+          env:
+            - name: SPRING_SECURITY_USER_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "library.fullname" . }}-secrets
+                  key: APP_SECURITY_USERNAME
+            - name: SPRING_SECURITY_USER_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "library.fullname" . }}-secrets
+                  key: APP_SECURITY_PASSWORD
+          envFrom:
+            - configMapRef:
+                name: {{ include "library.fullname" . }}-config
+          livenessProbe:
+            httpGet:
+              port: http
+              path: {{ .Values.service.liveness.path }}
+            initialDelaySeconds: {{ .Values.service.liveness.initialDelaySeconds }}
+            timeoutSeconds: {{ .Values.service.liveness.timeoutSeconds }}
+            periodSeconds: {{ .Values.service.liveness.periodSeconds }}
+            failureThreshold: {{ .Values.service.liveness.failureThreshold }}
+          readinessProbe:
+            httpGet:
+              port: http
+              path: {{ .Values.service.readiness.path }}
+            initialDelaySeconds: {{ .Values.service.readiness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.service.readiness.periodSeconds }}
+            failureThreshold: {{ .Values.service.readiness.failureThreshold }}
