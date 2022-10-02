@@ -1,0 +1,29 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: library-helm
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: library-helm
+  project: default
+  source:
+    helm:
+      releaseName: library
+      valueFiles:
+        - values.yaml
+      values: |
+        ingress:
+          host: library.helm
+    path: k8s/helm/library
+    repoURL: https://github.com/vdrahun/k8s-examples-library.git
+    targetRevision: HEAD
+  syncPolicy:
+    automated:
+      prune: false
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=false
